@@ -1,5 +1,6 @@
 package com.prosa.workshop.rest.todo.service;
 
+import com.prosa.workshop.rest.todo.exception.ResourceNotFoundException;
 import com.prosa.workshop.rest.todo.dto.CreateTodoRequest;
 import com.prosa.workshop.rest.todo.dto.TodoDto;
 import com.prosa.workshop.rest.todo.dto.UpdateTodoRequest;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -32,7 +34,11 @@ public class TodoService {
     // Hint: todoRepository.findByStatus(TodoStatus) and todoRepository.findAll()
     // -------------------------------------------------------------------------
     public List<TodoDto> findAll(String status) {
-        throw new UnsupportedOperationException("TODO 1: implement findAll");
+        if (status != null) {
+            return todoRepository.findByStatus(TodoStatus.valueOf(status.toUpperCase()))
+                    .stream().map(this::toDto).collect(Collectors.toList());
+        }
+        return todoRepository.findAll().stream().map(this::toDto).collect(Collectors.toList());
     }
 
     // -------------------------------------------------------------------------
@@ -45,7 +51,9 @@ public class TodoService {
     // Hint: optional.map(this::toDto).orElseThrow(...)
     // -------------------------------------------------------------------------
     public TodoDto findById(Long id) {
-        throw new UnsupportedOperationException("TODO 2: implement findById");
+        return todoRepository.findById(id)
+                .map(this::toDto)
+                .orElseThrow(() -> ResourceNotFoundException.forTodo(id));
     }
 
     // -------------------------------------------------------------------------
@@ -58,7 +66,13 @@ public class TodoService {
     // -------------------------------------------------------------------------
     @Transactional
     public TodoDto create(CreateTodoRequest request) {
-        throw new UnsupportedOperationException("TODO 3: implement create");
+        Todo todo = Todo.builder()
+                .title(request.getTitle())
+                .description(request.getDescription())
+                .dueDate(request.getDueDate())
+                .status(TodoStatus.OPEN)
+                .build();
+        return toDto(todoRepository.save(todo));
     }
 
     // -------------------------------------------------------------------------
@@ -74,7 +88,13 @@ public class TodoService {
     // -------------------------------------------------------------------------
     @Transactional
     public TodoDto update(Long id, UpdateTodoRequest request) {
-        throw new UnsupportedOperationException("TODO 4: implement update");
+        Todo todo = todoRepository.findById(id)
+                .orElseThrow(() -> ResourceNotFoundException.forTodo(id));
+        if (request.getTitle() != null)       todo.setTitle(request.getTitle());
+        if (request.getDescription() != null) todo.setDescription(request.getDescription());
+        if (request.getStatus() != null)      todo.setStatus(request.getStatus());
+        if (request.getDueDate() != null)     todo.setDueDate(request.getDueDate());
+        return toDto(todoRepository.save(todo));
     }
 
     // -------------------------------------------------------------------------
@@ -84,7 +104,10 @@ public class TodoService {
     // -------------------------------------------------------------------------
     @Transactional
     public TodoDto updateStatus(Long id, TodoStatus newStatus) {
-        throw new UnsupportedOperationException("TODO 5: implement updateStatus");
+        Todo todo = todoRepository.findById(id)
+                .orElseThrow(() -> ResourceNotFoundException.forTodo(id));
+        todo.setStatus(newStatus);
+        return toDto(todoRepository.save(todo));
     }
 
     // -------------------------------------------------------------------------
@@ -97,7 +120,9 @@ public class TodoService {
     // -------------------------------------------------------------------------
     @Transactional
     public void delete(Long id) {
-        throw new UnsupportedOperationException("TODO 6: implement delete");
+        Todo todo = todoRepository.findById(id)
+                .orElseThrow(() -> ResourceNotFoundException.forTodo(id));
+        todoRepository.delete(todo);
     }
 
     // -------------------------------------------------------------------------

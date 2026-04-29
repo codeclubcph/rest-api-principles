@@ -33,7 +33,7 @@ public class TodoController {
     @GetMapping
     public ResponseEntity<List<TodoDto>> getAllTodos(
             @RequestParam(required = false) String status) {
-        return null; // TODO A: implement me
+        return ResponseEntity.ok(todoService.findAll(status));
     }
 
     // -------------------------------------------------------------------------
@@ -46,7 +46,7 @@ public class TodoController {
     // -------------------------------------------------------------------------
     @GetMapping("/{id}")
     public ResponseEntity<TodoDto> getTodoById(@PathVariable Long id) {
-        return null; // TODO B: implement me
+        return ResponseEntity.ok(todoService.findById(id));
     }
 
     // -------------------------------------------------------------------------
@@ -64,7 +64,9 @@ public class TodoController {
     public ResponseEntity<TodoDto> createTodo(
             @Valid @RequestBody CreateTodoRequest request,
             UriComponentsBuilder uriBuilder) {
-        return null; // TODO C: implement me
+        TodoDto created = todoService.create(request);
+        var location = uriBuilder.path("/api/v1/todos/{id}").buildAndExpand(created.getId()).toUri();
+        return ResponseEntity.created(location).body(created);
     }
 
     // -------------------------------------------------------------------------
@@ -79,7 +81,7 @@ public class TodoController {
     public ResponseEntity<TodoDto> updateTodo(
             @PathVariable Long id,
             @Valid @RequestBody UpdateTodoRequest request) {
-        return null; // TODO D: implement me
+        return ResponseEntity.ok(todoService.update(id, request));
     }
 
     // -------------------------------------------------------------------------
@@ -93,7 +95,7 @@ public class TodoController {
     public ResponseEntity<TodoDto> updateStatus(
             @PathVariable Long id,
             @RequestParam TodoStatus status) {
-        return null; // TODO E: implement me
+        return ResponseEntity.ok(todoService.updateStatus(id, status));
     }
 
     // -------------------------------------------------------------------------
@@ -106,6 +108,7 @@ public class TodoController {
     // -------------------------------------------------------------------------
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTodo(@PathVariable Long id) {
-        return null; // TODO F: implement me
+        todoService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }
